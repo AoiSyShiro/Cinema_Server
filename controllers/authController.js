@@ -2,21 +2,21 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Đăng ký người dùng
+// User registration handler
 exports.register = async (req, res) => {
     const { username, password, email, role } = req.body;
 
     try {
-        // Kiểm tra người dùng đã tồn tại chưa
+        // Check if the user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: 'Email đã tồn tại' });
         }
 
-        // Mã hóa mật khẩu
+        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Tạo người dùng mới
+        // Create a new user
         const newUser = new User({
             username,
             password: hashedPassword,
@@ -25,12 +25,14 @@ exports.register = async (req, res) => {
             created_at: new Date(),
         });
 
+        // Save the new user to the database
         await newUser.save();
         res.status(201).json({ message: 'Đăng ký thành công' });
     } catch (err) {
         res.status(500).json({ message: 'Lỗi đăng ký', error: err.message });
     }
 };
+
 
 // Đăng nhập
 exports.login = async (req, res) => {
