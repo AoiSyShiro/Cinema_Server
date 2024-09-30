@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const ProfileInfoSchema = new mongoose.Schema({
     address: String,
     phone_number: String,
-    favorite_movies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }]
+    favorite_movies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }],
+    gender: { type: String, enum: ['Male', 'Female', 'Other'], default: 'Other' } // Thêm trường giới tính
 });
 
 const UserSchema = new mongoose.Schema({
