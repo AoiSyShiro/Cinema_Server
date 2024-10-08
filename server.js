@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
+const path = require('path'); // Đảm bảo đã import thư viện path
+const open = require('open'); // Import package open
 
 dotenv.config();
 
@@ -10,15 +12,40 @@ app.use(bodyParser.json());
 
 // Middleware để log thông tin yêu cầu
 const logRequestInfo = (req, res, next) => {
+    const start = Date.now(); // Lưu thời gian bắt đầu
+    const { method, path } = req; // Lấy phương thức và đường dẫn từ yêu cầu
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress; // Lấy địa chỉ IP
+
+    // Ghi thông tin yêu cầu
     console.log('Thông tin yêu cầu:');
-    console.log('Phương thức:', req.method);
-    console.log('Đường dẫn:', req.path);
-    console.log('Thân yêu cầu:', req.body);
+    console.log('Phương thức:', method);
+    console.log('Đường dẫn:', path);
+    console.log('IP:', ip);
+    console.log('Thời gian yêu cầu:', new Date().toISOString());
+
+    // Khi phản hồi đã hoàn tất, ghi thông tin phản hồi
+    res.on('finish', () => {
+        const duration = Date.now() - start; // Tính thời gian xử lý
+        console.log('Trạng thái phản hồi:', res.statusCode);
+        console.log('Thời gian xử lý (ms):', duration);
+    });
+
     next(); // Chuyển đến middleware tiếp theo hoặc route handler
 };
 
+//BETA
+
 // Sử dụng middleware
 app.use(logRequestInfo);
+
+
+// Thêm middleware để phục vụ các file tĩnh
+app.use(express.static(path.join(__dirname, 'ui'))); // Sử dụng thư mục ui để phục vụ file tĩnh
+
+// Route để mở file index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'ui', 'index.html')); // Đường dẫn đến file index.html
+});
 
 const authRoutes = require('./routes/authRoutes'); // Adjust path as necessary
 const categoryRoutes = require('./routes/categoryRoutes');
@@ -40,7 +67,12 @@ const connectToDatabase = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('Kết nối đến MongoDB thành công');
-        app.listen(PORT, () => console.log(`Server đang chạy ở cổng ${PORT}`));
+
+        app.listen(PORT, async () => {
+            console.log(`Server đang chạy ở cổng ${PORT}`);
+            // Mở trình duyệt đến trang chính
+            await open(`http://localhost:${PORT}`);
+        });
     } catch (err) {
         console.error('Không thể kết nối đến MongoDB:', err.message);
         process.exit(1);
@@ -48,3 +80,4 @@ const connectToDatabase = async () => {
 };
 
 connectToDatabase();
+
