@@ -1,0 +1,139 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Arial', sans-serif;
+    color: #333;
+    line-height: 1.6;
+}
+
+.bg-dark {
+    background-color: #343a40 !important;
+}
+
+.nav-link {
+    color: #ffffff;
+}
+
+.nav-link:hover {
+    background-color: #495057;
+}
+
+.content-section {
+    display: none; /* Ẩn các phần mặc định */
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.content-section.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.table {
+    margin-top: 20px;
+    border-collapse: collapse;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+.table th, .table td {
+    padding: 12px;
+    text-align: left;
+}
+
+.table th {
+    background-color: #343a40;
+    color: #ffffff;
+}
+
+.table td {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+.table tr:hover td {
+    background-color: #e2e6ea;
+}
+
+.btn {
+    margin: 5px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Animation Effects */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+.content-section {
+    animation: fadeIn 0.5s forwards;
+}
+
+.content-section.inactive {
+    animation: fadeOut 0.5s forwards;
+}
+
+/* Custom styles for buttons */
+.btn-success {
+    background-color: #28a745;
+    border: none;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border: none;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+}
+
+/* Custom scrollbar for tables */
+.table::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table::-webkit-scrollbar-thumb {
+    background-color: #343a40;
+    border-radius: 4px;
+}
+
+.table::-webkit-scrollbar-thumb:hover {
+    background-color: #495057;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .table {
+        display: block;
+        overflow-x: auto;
+    }
+}
