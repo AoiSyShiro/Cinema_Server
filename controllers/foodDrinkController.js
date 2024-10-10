@@ -1,71 +1,99 @@
 const FoodDrink = require('../models/FoodDrink');
+const cloudinary = require('cloudinary').v2;
 
-// Thêm đồ ăn/drink
-exports.addFoodDrink = async (req, res) => {
-    const { name, type, price, description } = req.body;
-
+// Lấy danh sách đồ ăn/đồ uống
+const getFoodDrinks = async (req, res) => {
     try {
-        const newFoodDrink = new FoodDrink({
+        const foodDrinks = await FoodDrink.find();
+        res.json(foodDrinks);
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách đồ ăn/đồ uống:', error);
+        res.status(500).json({ message: 'Lỗi khi lấy danh sách đồ ăn/đồ uống', error });
+    }
+};
+
+// Thêm đồ ăn/đồ uống
+const addFoodDrink = async (req, res) => {
+    try {
+        const { name, type, price } = req.body;
+
+        const foodDrink = new FoodDrink({
             name,
             type,
             price,
-            description,
-            created_at: new Date(),
-            updated_at: new Date(),
         });
 
-        await newFoodDrink.save();
-        res.status(201).json({ message: 'Thêm đồ ăn/drink thành công', foodDrink: newFoodDrink });
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi thêm đồ ăn/drink', error: err.message });
-    }
-};
-
-// Cập nhật đồ ăn/drink
-exports.updateFoodDrink = async (req, res) => {
-    const { id } = req.params;
-    const { name, type, price, description } = req.body;
-
-    try {
-        const updatedFoodDrink = await FoodDrink.findByIdAndUpdate(
-            id,
-            { name, type, price, description, updated_at: new Date() },
-            { new: true }
-        );
-
-        if (!updatedFoodDrink) {
-            return res.status(404).json({ message: 'Đồ ăn/drink không tồn tại' });
+        // Nếu có hình ảnh được tải lên
+        if (req.file) {
+            const result = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream((error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                });
+                stream.end(req.file.buffer);
+            });
+            foodDrink.image = result.secure_url;  // Lưu URL hình ảnh
         }
 
-        res.status(200).json({ message: 'Cập nhật đồ ăn/drink thành công', foodDrink: updatedFoodDrink });
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi cập nhật đồ ăn/drink', error: err.message });
+        await foodDrink.save();
+        res.status(201).json({ message: 'Thêm đồ ăn/đồ uống thành công!', foodDrink });
+    } catch (error) {
+        console.error('Lỗi khi thêm đồ ăn/đồ uống:', error);
+        res.status(500).json({ message: 'Lỗi khi thêm đồ ăn/đồ uống', error });
     }
 };
 
-// Xóa đồ ăn/drink
-exports.deleteFoodDrink = async (req, res) => {
-    const { id } = req.params;
-
+// Cập nhật đồ ăn/đồ uống
+const updateFoodDrink = async (req, res) => {
     try {
-        const deletedFoodDrink = await FoodDrink.findByIdAndDelete(id);
-
-        if (!deletedFoodDrink) {
-            return res.status(404).json({ message: 'Đồ ăn/drink không tồn tại' });
+        const foodDrink = await FoodDrink.findById(req.params.id);
+        if (!foodDrink) {
+            return res.status(404).json({ message: 'Không tìm thấy đồ ăn/đồ uống' });
         }
 
-        res.status(200).json({ message: 'Xóa đồ ăn/drink thành công' });
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi xóa đồ ăn/drink', error: err.message });
+        // Cập nhật thông tin
+        foodDrink.name = req.body.name || foodDrink.name;
+        foodDrink.type = req.body.type || foodDrink.type;
+        foodDrink.price = req.body.price || foodDrink.price;
+
+        // Nếu có hình ảnh mới được tải lên
+        if (req.file) {
+            const result = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream((error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                });
+                stream.end(req.file.buffer);
+            });
+            foodDrink.image = result.secure_url;  // Cập nhật URL hình ảnh
+        }
+
+        foodDrink.updated_at = Date.now();
+        await foodDrink.save();
+        res.json({ message: 'Chỉnh sửa đồ ăn/đồ uống thành công!', foodDrink });
+    } catch (error) {
+        console.error('Lỗi khi chỉnh sửa đồ ăn/đồ uống:', error);
+        res.status(500).json({ message: 'Lỗi khi chỉnh sửa đồ ăn/đồ uống', error });
     }
 };
 
-// Lấy danh sách đồ ăn/drink
-exports.getFoodDrinks = async (req, res) => {
+// Xóa đồ ăn/đồ uống
+const deleteFoodDrink = async (req, res) => {
     try {
-        const foodDrinks = await FoodDrink.find();
-        res.status(200).json(foodDrinks);
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi lấy danh sách đồ ăn/drink', error: err.message });
+        const foodDrink = await FoodDrink.findByIdAndDelete(req.params.id);
+        if (!foodDrink) {
+            return res.status(404).json({ message: 'Không tìm thấy đồ ăn/đồ uống để xóa' });
+        }
+        res.json({ message: 'Xóa đồ ăn/đồ uống thành công!' });
+    } catch (error) {
+        console.error('Lỗi khi xóa đồ ăn/đồ uống:', error);
+        res.status(500).json({ message: 'Lỗi khi xóa đồ ăn/đồ uống', error });
     }
+};
+
+module.exports = {
+    getFoodDrinks,
+    addFoodDrink,
+    updateFoodDrink,
+    deleteFoodDrink,
 };
