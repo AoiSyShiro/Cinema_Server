@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path');
 const open = require('open');
@@ -17,12 +16,12 @@ cloudinary.config({
 });
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Middleware để log thông tin yêu cầu
 const logRequestInfo = (req, res, next) => {
     const start = Date.now();
-    const {method, path} = req;
+    const { method, path } = req;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
     console.log('Thông tin yêu cầu:', method, path, ip, new Date().toISOString());
@@ -37,10 +36,6 @@ const logRequestInfo = (req, res, next) => {
 
 app.use(logRequestInfo);
 
-// Cấu hình multer
-const storage = multer.memoryStorage();
-const upload = multer({storage: storage});
-
 // Phục vụ file tĩnh từ thư mục ui
 app.use(express.static(path.join(__dirname, 'ui')));
 
@@ -52,10 +47,14 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const foodDrinkRoutes = require('./routes/foodDrinkRoutes');
+const movieRoutes = require('./routes/movieRoutes');
 
+// Đăng ký các routes
 app.use('/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api/food-drinks', foodDrinkRoutes); // Sử dụng các route từ foodDrinkRoutes
+app.use('/api/food-drinks', foodDrinkRoutes);
+app.use('/api/movies', movieRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 
