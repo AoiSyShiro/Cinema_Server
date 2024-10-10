@@ -33,7 +33,6 @@ const logRequestInfo = (req, res, next) => {
     next(); // Chuyển đến middleware tiếp theo hoặc route handler
 };
 
-//BETA
 
 // Sử dụng middleware
 app.use(logRequestInfo);
