@@ -1,87 +1,101 @@
 const Movie = require('../models/Movie');
+const cloudinary = require('cloudinary').v2;
 
-// Thêm phim
-exports.addMovie = async (req, res) => {
-    const { title, description, trailer_url, category_id, show_time, duration, rating, release_date, cast } = req.body;
-
+// Lấy danh sách phim
+const getMovies = async (req, res) => {
     try {
-        const newMovie = new Movie({
-            title,
-            description,
-            trailer_url,
-            category_id,
-            show_time,
-            duration,
-            rating,
-            release_date,
-            cast,
-            created_at: new Date(),
-            updated_at: new Date(),
-        });
-
-        await newMovie.save();
-        res.status(201).json({ message: 'Thêm phim thành công', movie: newMovie });
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi thêm phim', error: err.message });
+        const movies = await Movie.find();
+        res.json(movies);
+    } catch (error) {
+        console.error('Lỗi khi lấy danh sách phim:', error);
+        res.status(500).json({ message: 'Lỗi khi lấy danh sách phim', error });
     }
 };
 
-// Cập nhật phim
-exports.updateMovie = async (req, res) => {
-    const { id } = req.params;
-    const { title, description, trailer_url, category_id, show_time, duration, rating, release_date, cast } = req.body;
-
+// Thêm phim
+const addMovie = async (req, res) => {
     try {
-        const updatedMovie = await Movie.findByIdAndUpdate(
-            id,
-            {
-                title,
-                description,
-                trailer_url,
-                category_id,
-                show_time,
-                duration,
-                rating,
-                release_date,
-                cast,
-                updated_at: new Date(),
-            },
-            { new: true }
-        );
+        let imageUrl;
 
-        if (!updatedMovie) {
-            return res.status(404).json({ message: 'Phim không tồn tại' });
+        if (req.file) {
+            imageUrl = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream({ resource_type: 'auto' }, (error, result) => {
+                    if (error) {
+                        console.error('Lỗi khi upload hình ảnh:', error);
+                        return reject('Lỗi khi upload hình ảnh.');
+                    }
+                    resolve(result.secure_url);
+                });
+
+                stream.end(req.file.buffer);
+            });
         }
 
-        res.status(200).json({ message: 'Cập nhật phim thành công', movie: updatedMovie });
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi cập nhật phim', error: err.message });
+        console.log('Dữ liệu phim:', req.body); // In ra dữ liệu nhận được
+
+        const newMovie = new Movie({ ...req.body, image_url: imageUrl });
+        await newMovie.save();
+        res.status(201).json(newMovie);
+    } catch (error) {
+        console.error('Lỗi khi thêm phim:', error); // In ra lỗi
+        res.status(400).json({ message: 'Có lỗi xảy ra khi thêm phim.', error: error.message });
+    }
+};
+
+// Sửa phim
+const updateMovie = async (req, res) => {
+    const { id } = req.params;
+    let imageUrl;
+
+    try {
+        const movie = await Movie.findById(id);
+
+        // Nếu có file hình ảnh mới, upload lên Cloudinary
+        if (req.file) {
+            imageUrl = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream({ resource_type: 'auto' }, (error, result) => {
+                    if (error) {
+                        console.error('Lỗi khi upload hình ảnh:', error);
+                        return reject('Lỗi khi upload hình ảnh.');
+                    }
+                    resolve(result.secure_url); // URL hình ảnh mới
+                });
+
+                stream.end(req.file.buffer);
+            });
+        } else {
+            imageUrl = movie.image_url; // Giữ nguyên URL cũ nếu không có hình mới
+        }
+
+        const updatedMovie = await Movie.findByIdAndUpdate(id, { ...req.body, image_url: imageUrl }, { new: true });
+        if (!updatedMovie) {
+            return res.status(404).json({ message: 'Không tìm thấy phim.' });
+        }
+        res.json(updatedMovie);
+    } catch (error) {
+        res.status(400).json({ message: 'Có lỗi xảy ra khi cập nhật phim.' });
     }
 };
 
 // Xóa phim
-exports.deleteMovie = async (req, res) => {
+const deleteMovie = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const deletedMovie = await Movie.findByIdAndDelete(id);
-
-        if (!deletedMovie) {
-            return res.status(404).json({ message: 'Phim không tồn tại' });
+        const movie = await Movie.findByIdAndDelete(id);
+        if (!movie) {
+            return res.status(404).json({ message: 'Không tìm thấy phim.' });
         }
-
         res.status(200).json({ message: 'Xóa phim thành công' });
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi xóa phim', error: err.message });
+    } catch (error) {
+        console.error('Có lỗi xảy ra khi xóa phim:', error);
+        res.status(500).json({ message: 'Có lỗi xảy ra' });
     }
 };
 
-// Lấy danh sách phim
-exports.getMovies = async (req, res) => {
-    try {
-        const movies = await Movie.find().populate('category_id', 'name'); // Thêm thông tin thể loại vào danh sách phim
-        res.status(200).json(movies);
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi lấy danh sách phim', error: err.message });
-    }
+module.exports = {
+    getMovies,
+    addMovie,
+    updateMovie,
+    deleteMovie,
 };
