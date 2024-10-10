@@ -274,15 +274,14 @@
                 </div>
             </div>
 
-
             <!-- Quản lý Phim -->
             <div id="movies" class="content-section">
                 <h4>Quản lý Phim</h4>
                 <div class="mb-3">
-                    <input type="text" class="form-control" placeholder="Tìm kiếm phim..." id="search-movie">
+                    <input type="text" class="form-control" placeholder="Tìm kiếm phim..." id="search-movie" oninput="searchMovies()">
                 </div>
                 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#movieModal"
-                        onclick="openAddMovieModal()">Thêm phim mới
+                        onclick="showAddMovieModal()">Thêm phim mới
                 </button>
                 <table class="table">
                     <thead>
@@ -315,7 +314,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <form id="movieForm">
+                            <form id="movieForm" enctype="multipart/form-data">
                                 <input type="hidden" id="movieId">
                                 <div class="mb-3">
                                     <label for="movieTitle" class="form-label">Tiêu đề</label>
@@ -323,55 +322,108 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="movieDescription" class="form-label">Mô tả</label>
-                                    <textarea class="form-control" id="movieDescription" required></textarea>
+                                    <textarea class="form-control" id="movieDescription" name="description" required></textarea>
                                 </div>
                                 <div class="mb-3">
                                     <label for="movieCategory" class="form-label">Thể loại</label>
-                                    <input type="text" class="form-control" id="movieCategory" required
-                                           placeholder="Nhập thể loại">
+                                    <input type="text" class="form-control" id="movieCategory" name="category" placeholder="Nhập thể loại" required>
                                 </div>
-
                                 <div class="mb-3">
                                     <label for="movieShowTime" class="form-label">Thời gian chiếu</label>
-                                    <input type="datetime-local" class="form-control" id="movieShowTime" required>
+                                    <input type="datetime-local" class="form-control" id="movieShowTime" name="show_time" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="movieDuration" class="form-label">Thời gian (phút)</label>
-                                    <input type="number" class="form-control" id="movieDuration" required>
+                                    <input type="number" class="form-control" id="movieDuration" name="duration" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="movieRating" class="form-label">Đánh giá</label>
-                                    <input type="number" class="form-control" id="movieRating" min="1" max="10"
-                                           required>
+                                    <input type="number" class="form-control" id="movieRating" name="rating" min="1" max="10" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="movieReleaseDate" class="form-label">Ngày phát hành</label>
-                                    <input type="date" class="form-control" id="movieReleaseDate" required>
+                                    <input type="date" class="form-control" id="movieReleaseDate" name="release_date" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="movieCast" class="form-label">Diễn viên</label>
-                                    <input type="text" class="form-control" id="movieCast" required>
+                                    <label for="movieCast" class="form-label">Diễn viên (cách nhau bằng dấu phẩy)</label>
+                                    <input type="text" class="form-control" id="movieCast" name="cast" placeholder="VD: Diễn viên A, Diễn viên B" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="movieImage" class="form-label">Hình ảnh</label>
-                                    <input type="file" class="form-control" id="movieImage" name="movieImage" required>
+                                    <input type="file" class="form-control" id="movieImage" name="movieImage" accept="image/*">
                                 </div>
-
-
                             </form>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                            <button type="button" class="btn btn-primary" onclick="addOrUpdateMovie()">Lưu</button>
+                            <button type="button" class="btn btn-primary" id="saveButton" onclick="addOrUpdateMovie()">Lưu</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal sửa phim -->
+            <div class="modal fade" id="editMovieModal" tabindex="-1" aria-labelledby="editMovieModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editMovieModalLabel">Sửa Phim</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editMovieForm" enctype="multipart/form-data">
+                                <input type="hidden" id="editMovieId">
+                                <div class="mb-3">
+                                    <label for="editMovieTitle" class="form-label">Tiêu đề</label>
+                                    <input type="text" class="form-control" id="editMovieTitle" name="title" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editMovieDescription" class="form-label">Mô tả</label>
+                                    <textarea class="form-control" id="editMovieDescription" name="description" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editMovieCategory" class="form-label">Thể loại</label>
+                                    <input type="text" class="form-control" id="editMovieCategory" name="category" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editMovieShowTime" class="form-label">Thời gian chiếu</label>
+                                    <input type="datetime-local" class="form-control" id="editMovieShowTime" name="show_time" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editMovieDuration" class="form-label">Thời gian (phút)</label>
+                                    <input type="number" class="form-control" id="editMovieDuration" name="duration" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editMovieRating" class="form-label">Đánh giá</label>
+                                    <input type="number" class="form-control" id="editMovieRating" name="rating" min="1" max="10" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editMovieReleaseDate" class="form-label">Ngày phát hành</label>
+                                    <input type="date" class="form-control" id="editMovieReleaseDate" name="release_date" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editMovieCast" class="form-label">Diễn viên</label>
+                                    <input type="text" class="form-control" id="editMovieCast" name="cast" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="editMovieImage" class="form-label">Hình ảnh</label>
+                                    <input type="file" class="form-control" id="editMovieImage" name="movieImage" accept="image/*">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="button" class="btn btn-primary" id="updateButton" onclick="updateMovie()">Lưu</button>
                         </div>
                     </div>
                 </div>
             </div>
 
 
+
+
             <!-- Modal xác nhận xóa phim -->
-            <div class="modal fade" id="deleteMovieModal" tabindex="-1" aria-labelledby="deleteMovieModalLabel"
-                 aria-hidden="true">
+            <div class="modal fade" id="deleteMovieModal" tabindex="-1" aria-labelledby="deleteMovieModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -383,7 +435,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Không</button>
-                            <button type="button" class="btn btn-danger" id="confirmDeleteButton">Có</button>
+                            <button type="button" class="btn btn-danger" id="confirmDeleteButton" onclick="confirmDeleteMovie()">Có</button>
                         </div>
                     </div>
                 </div>
@@ -450,5 +502,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/javascript.js" defer></script>
+<script src="js/movies.js" defer></script>
 </body>
 </html>

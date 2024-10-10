@@ -5,6 +5,7 @@ const path = require('path');
 const open = require('open');
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 dotenv.config();
 
@@ -14,6 +15,17 @@ cloudinary.config({
     api_key: process.env.API_KEY,
     api_secret: process.env.API_SECRET
 });
+
+// Cấu hình multer với Cloudinary
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'movies', // Tên thư mục trong Cloudinary
+        allowed_formats: ['jpg', 'png', 'jpeg'], // Định dạng cho phép
+    },
+});
+
+const upload = multer({ storage });
 
 const app = express();
 app.use(express.json());
@@ -47,14 +59,28 @@ app.get('/', (req, res) => {
 const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const foodDrinkRoutes = require('./routes/foodDrinkRoutes');
-const movieRoutes = require('./routes/movieRoutes');
+const movieController = require('./controllers/movieController'); // Import movie controller
 
 // Đăng ký các routes
 app.use('/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/food-drinks', foodDrinkRoutes);
-app.use('/api/movies', movieRoutes);
 
+// Routes cho phim
+app.get('/api/movies', movieController.getMovies);
+app.post('/api/movies', upload.single('movieImage'), movieController.addMovie);
+app.put('/api/movies/:id', upload.single('movieImage'), movieController.updateMovie);
+app.delete('/api/movies/:id', movieController.deleteMovie);
+
+// Route upload tệp hình ảnh (nếu cần)
+app.post('/upload', upload.single('movieImage'), async (req, res) => {
+    try {
+        const result = await cloudinary.uploader.upload(req.file.path); // Upload lên Cloudinary
+        res.status(200).json({ url: result.secure_url });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi tải lên', error: error.message });
+    }
+});
 
 const PORT = process.env.PORT || 5000;
 

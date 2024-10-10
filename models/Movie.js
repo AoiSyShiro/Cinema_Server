@@ -1,18 +1,17 @@
 const mongoose = require('mongoose');
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
-
 
 const movieSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    description: { type: String, required: true },
-    category_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
-    show_time: { type: Date, required: true },
-    duration: { type: Number, required: true },
-    rating: { type: Number, required: true },
-    release_date: { type: Date, required: true },
-    cast: { type: String, required: true },
-    image_url: { type: String, required: true }
-}, { timestamps: true });
+    description: { type: String },
+    category: { type: String },
+    show_time: { type: Date },
+    duration: { type: Number },
+    rating: { type: Number },
+    release_date: { type: Date },
+    cast: { type: String },
+    image: { type: String } // Đường dẫn hình ảnh
+});
 
-module.exports = mongoose.model('Movie', movieSchema);
+const Movie = mongoose.model('Movie', movieSchema);
+
+module.exports = Movie;
