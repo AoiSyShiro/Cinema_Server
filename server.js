@@ -4,6 +4,14 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const path = require('path'); // Đảm bảo đã import thư viện path
 const open = require('open'); // Import package open
+const cloudinary = require('cloudinary').v2;
+
+//Cloudinary Lưu Ảnh
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET
+});
 
 dotenv.config();
 
@@ -13,7 +21,7 @@ app.use(bodyParser.json());
 // Middleware để log thông tin yêu cầu
 const logRequestInfo = (req, res, next) => {
     const start = Date.now(); // Lưu thời gian bắt đầu
-    const { method, path } = req; // Lấy phương thức và đường dẫn từ yêu cầu
+    const {method, path} = req; // Lấy phương thức và đường dẫn từ yêu cầu
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress; // Lấy địa chỉ IP
 
     // Ghi thông tin yêu cầu
