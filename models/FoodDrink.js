@@ -4,7 +4,7 @@ const FoodDrinkSchema = new mongoose.Schema({
     name: { type: String, required: true },
     type: { type: String, required: true },
     price: { type: Number, required: true },
-    description: String,
+    image: String,
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date }
 });

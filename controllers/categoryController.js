@@ -1,69 +1,106 @@
 const Category = require('../models/Category');
+const cloudinary = require('cloudinary').v2;
+
+// Lấy danh sách thể loại
+const getCategories = async (req, res) => {
+    try {
+        const categories = await Category.find();
+        res.json(categories);
+    } catch (error) {
+        res.status(500).json({ message: 'Có lỗi xảy ra khi lấy danh sách thể loại', error });
+    }
+};
 
 // Thêm thể loại
-exports.addCategory = async (req, res) => {
+const addCategory = async (req, res) => {
     const { name, description } = req.body;
+    let imageUrl;
 
     try {
+        if (req.file) {
+            const result = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream((error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                });
+                stream.end(req.file.buffer);
+            });
+            imageUrl = result.secure_url;
+        }
+
         const newCategory = new Category({
             name,
             description,
-            created_at: new Date(),
-            updated_at: new Date(),
+            image: imageUrl,
         });
 
         await newCategory.save();
-        res.status(201).json({ message: 'Thêm thể loại thành công', category: newCategory });
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi thêm thể loại', error: err.message });
+        res.status(201).json(newCategory);
+    } catch (error) {
+        console.error(error);
+        res.status(400).json({ message: 'Có lỗi xảy ra!', error });
     }
 };
 
-// Cập nhật thể loại
-exports.updateCategory = async (req, res) => {
-    const { id } = req.params;
-    const { name, description } = req.body;
-
+const updateCategory = async (req, res) => {
     try {
-        const updatedCategory = await Category.findByIdAndUpdate(
-            id,
-            { name, description, updated_at: new Date() },
-            { new: true }
-        );
+        console.log('Request body:', req.body); // Xem nội dung req.body
+        console.log('Request file:', req.file);   // Xem nội dung req.file
 
-        if (!updatedCategory) {
-            return res.status(404).json({ message: 'Thể loại không tồn tại' });
+        // Tìm thể loại theo ID
+        const category = await Category.findById(req.params.id);
+        if (!category) {
+            return res.status(404).json({ message: 'Không tìm thấy thể loại' });
         }
 
-        res.status(200).json({ message: 'Cập nhật thể loại thành công', category: updatedCategory });
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi cập nhật thể loại', error: err.message });
+        // Cập nhật thông tin thể loại
+        category.name = req.body.name || category.name;
+        category.description = req.body.description || category.description;
+
+        // Cập nhật hình ảnh nếu có
+        if (req.file) {
+            const result = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream((error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                });
+                stream.end(req.file.buffer);
+            });
+            category.image = result.secure_url; // Cập nhật đường dẫn hình ảnh
+        }
+
+        // Cập nhật thời gian chỉnh sửa
+        category.updated_at = Date.now();
+
+        // Lưu thể loại vào cơ sở dữ liệu
+        await category.save();
+
+        // Trả về thông báo thành công và thể loại đã cập nhật
+        res.json({ message: 'Chỉnh sửa thể loại thành công!', category });
+    } catch (error) {
+        console.error('Error during update:', error); // In lỗi ra console
+        res.status(500).json({ message: 'Lỗi khi chỉnh sửa thể loại', error });
     }
 };
+
+
 
 // Xóa thể loại
-exports.deleteCategory = async (req, res) => {
-    const { id } = req.params;
-
+const deleteCategory = async (req, res) => {
     try {
-        const deletedCategory = await Category.findByIdAndDelete(id);
-
-        if (!deletedCategory) {
-            return res.status(404).json({ message: 'Thể loại không tồn tại' });
+        const category = await Category.findByIdAndDelete(req.params.id);
+        if (!category) {
+            return res.status(404).json({ message: 'Không tìm thấy thể loại để xóa' });
         }
-
-        res.status(200).json({ message: 'Xóa thể loại thành công' });
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi xóa thể loại', error: err.message });
+        res.json({ message: 'Xóa thể loại thành công!' });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi khi xóa thể loại', error });
     }
 };
 
-// Lấy danh sách thể loại
-exports.getCategories = async (req, res) => {
-    try {
-        const categories = await Category.find();
-        res.status(200).json(categories);
-    } catch (err) {
-        res.status(500).json({ message: 'Lỗi khi lấy danh sách thể loại', error: err.message });
-    }
+module.exports = {
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    getCategories,
 };
