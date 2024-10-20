@@ -60,6 +60,7 @@ const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const foodDrinkRoutes = require('./routes/foodDrinkRoutes');
 const movieController = require('./controllers/movieController'); // Import movie controller
+const categoryController = require('./controllers/categoryController'); // Import movie controller
 
 // Đăng ký các routes
 app.use('/auth', authRoutes);
@@ -71,6 +72,8 @@ app.get('/api/movies', movieController.getMovies);
 app.post('/api/movies', upload.single('movieImage'), movieController.addMovie);
 app.put('/api/movies/:id', upload.single('movieImage'), movieController.updateMovie);
 app.delete('/api/movies/:id', movieController.deleteMovie);
+
+app.get('/api/category', categoryController.getCategories);
 
 // Route upload tệp hình ảnh (nếu cần)
 app.post('/upload', upload.single('movieImage'), async (req, res) => {
